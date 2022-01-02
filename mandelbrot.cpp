@@ -13,25 +13,27 @@
 // including SFML library and iostream for debugging
 #include <SFML/Graphics.hpp>
 #include <iostream>
-
+#include <string>
 // to make the window full screen Width and height are defined by aspect ratio 16-9 
 double aspect_ratio = 16/9;
-int WIDTH = 1920;
-int HEIGHT = (int) WIDTH/aspect_ratio;
+int WIDTH = 800;
+int HEIGHT = 450;
 
 // initial center x and y
-double centerx = -0.0;
-double centery = -0.0;
+// double centerx = -0.0;
+// double centery = -0.0;
+long double centerx = 0.360240443437614363;
+long double centery = 0.641313061064803174;
 // the distance from center to edges for x and y
 // i.e the window shows -m_x to m_x as the real axis and -m_y to m_y as the imaginary axis
-double m_x = 0.2; 
-double m_y = 0.2;
+long double m_y = 1e-15;
+long double m_x = 1e-15; 
 
 // initial max itearation
-double MAX_ITER = 50.;
+long double MAX_ITER = 1000.;
 
 // when a user zooms, the m_x and m_y will be multiplied or divied by zoom coefficient (zoom in / zoom out)
-double zoom_coef = 0.915;
+long double zoom_coef = 0.7;
 
 
 // to make it look better i want to use hsv color space but the sfml library only accepts the rgb/a color space
@@ -86,24 +88,24 @@ double w2s(double pos, double center,double margin,int real_length){
     return (double) pos*2.*margin/rl - margin + center;
 }
 // this function changes the maximum iteration (MAX_ITER)
-void change_max_iter(double *mi, double amount){
+void change_max_iter(long double *mi, long double amount){
     // if max iter is between 10 or 100
     // this function increases or decreases the value
-    if (*mi + amount >= 10. && *mi + amount <= 100.)
+    if (*mi + amount >= 10. && *mi + amount <= 1000.)
     {
         *mi += amount;
     }
     
 }
 // this function changes the center of the drawing by tenth of the margin value in the given direction
-void pan(double *cx, double *cy, double *mx, double *my, int dirx,int diry){
+void pan(long double *cx, long double *cy, long double *mx, long double *my, int dirx,int diry){
 
     *cx += dirx*(*mx)/10;
     *cy += diry*(*my)/10;
 }
 // these two function (zoom in and zoom out) changes the margin values by zoom coefficient
 // TODO: zoom in or zoom out by keeping the center values
-void zoom_in(double *cnx, double *cny, double *omx, double *omy,double mpx, double mpy){
+void zoom_in(long double *cnx, long double *cny, long double *omx, long double *omy,long double mpx, long double mpy){
 
     *omx *= zoom_coef;
     *omy *= zoom_coef; 
@@ -113,7 +115,7 @@ void zoom_in(double *cnx, double *cny, double *omx, double *omy,double mpx, doub
 
 
 }
-void zoom_out(double *cnx, double *cny, double *omx, double *omy,double mpx, double mpy){
+void zoom_out(long double *cnx, long double *cny, long double *omx, long double *omy,long double mpx, long double mpy){
     *omx /= zoom_coef;
     *omy /= zoom_coef; 
 
@@ -125,15 +127,15 @@ void zoom_out(double *cnx, double *cny, double *omx, double *omy,double mpx, dou
 // draws mandelbrot
 // it is not optimized
 // TODO: Optimize the code
-void draw_mandelbrot(double cx, double cy, double mx, double my,sf::Image &image, sf::Texture &texture, sf::Sprite &sprite){
+void draw_mandelbrot(long double cx, long double cy, long double mx, long double my,sf::Image &image, sf::Texture &texture, sf::Sprite &sprite){
     
 
-    double re,im,initial_re,initial_im,real_term,imaginary_term;
+    long double re,im,initial_re,initial_im,real_term,imaginary_term;
     int iter;
     int h;
     float s,v;
-    double XS = cx - mx;
-    double YS = cy - my;
+    long double XS = cx - mx;
+    long double YS = cy - my;
 
     for (int x = 0; x < WIDTH; x++)
     {
@@ -156,7 +158,7 @@ void draw_mandelbrot(double cx, double cy, double mx, double my,sf::Image &image
                 re = real_term + initial_re;
                 im = imaginary_term + initial_im;
 
-                if(std::abs(re + im) > 2) break;
+                if(std::abs(re + im) >= 2) break;
 
                 iter++;
             }
@@ -192,6 +194,15 @@ int main(){
     sf::Texture texture;
     sf::Sprite sprite;
     
+    sf::Font font;
+    font.loadFromFile("Poppins-Regular.ttf");
+    sf::Text text;
+    text.setFont(font);
+    text.setFillColor(sf::Color::White); //Maybe a color
+    text.setOutlineColor(sf::Color::Black);
+    text.setOutlineThickness(2);
+    text.setCharacterSize(18);
+    text.setPosition(0,0);
     image.create(WIDTH,HEIGHT,sf::Color::Black);
 
     
@@ -210,13 +221,13 @@ int main(){
                 // if the pressed key is + (add)
                 // increaes the maximum iteration value
                 if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add)){
-                    change_max_iter(&MAX_ITER,5.);
+                    change_max_iter(&MAX_ITER,10.);
                     draw_mandelbrot(centerx,centery,m_x,m_y,image,texture,sprite);
                 }
                 // if the pressed key is - (substract)
                 // decreases the maximum iteration value
                 else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract)){
-                    change_max_iter(&MAX_ITER,-5.);
+                    change_max_iter(&MAX_ITER,-10.);
                     draw_mandelbrot(centerx,centery,m_x,m_y,image,texture,sprite);
                 }
                 // if the pressed key is * (mulitply)
@@ -257,10 +268,14 @@ int main(){
                     draw_mandelbrot(centerx,centery,m_x,m_y,image,texture,sprite);
                 }
             }
-        }
+        }        
+        text.setString("Maximum Iteration: "+std::to_string(MAX_ITER)+"\nCenter x, y: (" + std::to_string(centerx) + ", "+ std::to_string(centery) + ")\nMargin x, y: ("
+        + std::to_string(m_x) + ", "+ std::to_string(m_y) + ")");
+        
         window.clear();
         
         window.draw(sprite);
+        window.draw(text);
         window.display();
     }
     return 0;
